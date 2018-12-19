@@ -1,0 +1,361 @@
+Last login: Tue Dec 18 19:24:19 on ttys001
+MacBook-Air-de-Viviana:~ viviana$ psql
+psql (10.6, server 11.0)
+WARNING: psql major version 10, server major version 11.
+         Some psql features might not work.
+Type "help" for help.
+
+
+# 1.- Crear una base de datos llamada call_list
+
+viviana=# CREATE DATABASE call_list;
+CREATE DATABASE
+
+
+# 2.- En la base de datos recien creada, crear la tabla users con los campos id (clave primaria), first_name, email.
+
+
+viviana=# CREATE TABLE users( id SERIAL PRIMARY KEY, first_name VARCHAR(50), email VARCHAR(50));
+CREATE TABLE
+viviana=# \d users
+                                     Table "public.users"
+   Column   |         Type          | Collation | Nullable |              Default              
+------------+-----------------------+-----------+----------+-----------------------------------
+ id         | integer               |           | not null | nextval('users_id_seq'::regclass)
+ first_name | character varying(50) |           |          | 
+ email      | character varying(50) |           |          | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+
+
+# 3.- Ingresar un usuario, llamado Carlos (el resto de los datos deben inventarlos).
+
+
+viviana=# INSERT INTO users (first_name, email) VALUES ('Carlos', 'carlos@gmail.com');
+INSERT 0 1
+viviana=# SELECT * FROM users
+viviana-# ;
+ id | first_name |      email       
+----+------------+------------------
+  1 | Carlos     | carlos@gmail.com
+(1 row)
+
+
+# 4.- Ingresar un usuario, llamada Laura (el resto de los datos deben inventarlos).
+
+
+viviana=# INSERT INTO users (first_name, email) VALUES ('Laura', 'laura@gmail.com');
+INSERT 0 1
+viviana=# SELECT * FROM users;                                                                          id | first_name |      email       
+----+------------+------------------
+  1 | Carlos     | carlos@gmail.com
+  2 | Laura      | laura@gmail.com
+(2 rows)
+
+
+# 5.- Crear una tabla llamada calls con los campos id (clave primaria), phone, date, user_id (foreign key relacionado a users).
+
+
+viviana=# CREATE TABLE calls( id SERIAL PRIMARY KEY, phone VARCHAR(50), date VARCHAR(50), user_id VARCHAR (50));
+CREATE TABLE
+viviana=# SELECT * FROM calls;
+ id | phone | date | user_id 
+----+-------+------+---------
+(0 rows)
+
+
+#Cambie el user_id de VARCHAR(50) a integer
+
+
+viviana=# ALTER TABLE calls ALTER COLUMN user_id TYPE integer USING (user_id::integer);
+ALTER TABLE
+viviana=# \d+ calls
+                                                        Table "public.calls"
+ Column  |         Type          | Collation | Nullable |              Default              | Storage  | Stats target | Description 
+---------+-----------------------+-----------+----------+-----------------------------------+----------+--------------+-------------
+ id      | integer               |           | not null | nextval('calls_id_seq'::regclass) | plain    |              | 
+ phone   | character varying(50) |           |          |                                   | extended |              | 
+ date    | character varying(50) |           |          |                                   | extended |              | 
+ user_id | integer               |           |          |                                   | plain    |              | 
+Indexes:
+    "calls_pkey" PRIMARY KEY, btree (id)
+
+
+# Agregue la clave foranea   
+
+
+viviana=# ALTER TABLE calls ADD CONSTRAINT userfk FOREIGN KEY (user_id) REFERENCES users (id);                                                                           
+ALTER TABLE
+viviana=# \d+ calls
+                                                        Table "public.calls"
+ Column  |         Type          | Collation | Nullable |              Default              | Storage  | Stats target | Description 
+---------+-----------------------+-----------+----------+-----------------------------------+----------+--------------+-------------
+ id      | integer               |           | not null | nextval('calls_id_seq'::regclass) | plain    |              | 
+ phone   | character varying(50) |           |          |                                   | extended |              | 
+ date    | character varying(50) |           |          |                                   | extended |              | 
+ user_id | integer               |           |          |                                   | plain    |              | 
+Indexes:
+    "calls_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "userfk" FOREIGN KEY (user_id) REFERENCES users(id)
+
+
+# 6.- Agregar a la tabla users el campo last_name
+
+
+viviana=# ALTER TABLE users ADD COLUMN last_name VARCHAR(50);
+ALTER TABLE
+viviana=# SELECT * FROM users;
+ id | first_name |      email       | last_name 
+----+------------+------------------+-----------
+  1 | Carlos     | carlos@gmail.com | 
+  2 | Laura      | laura@gmail.com  | 
+(2 rows)
+
+
+# 7.- Ingresar el apellido del usuario Carlos.
+
+
+viviana=# UPDATE users SET last_name='Aguero' where id =1;
+UPDATE 1
+viviana=# SELECT * FROM users;                                                                                          ;
+ id | first_name |      email       | last_name 
+----+------------+------------------+-----------
+  2 | Laura      | laura@gmail.com  | 
+  1 | Carlos     | carlos@gmail.com | Aguero
+(2 rows)
+
+
+# 8.- Ingresar el apellido del usuario Laura.
+
+
+viviana=# UPDATE users SET last_name='Campos' where id =2;
+UPDATE 1
+viviana=# SELECT * FROM users                                                                                            ;
+ id | first_name |      email       | last_name 
+----+------------+------------------+-----------
+  1 | Carlos     | carlos@gmail.com | Aguero
+  2 | Laura      | laura@gmail.com  | Campos
+(2 rows)
+
+viviana=# SELECT * FROM calls ;
+ id | phone | date | user_id 
+----+-------+------+---------
+(0 rows)
+
+# 9.- Ingresar 6 llamadas asociadas al usuario Laura.
+# 10.- Ingresar 4 llamadas asociadas al usuario Carlos.
+
+
+# Primera llamada de id=1                   
+viviana=# INSERT INTO calls (phone) VALUES ('1212121212');
+INSERT 0 1
+# Segunda llamada de id=2
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('123123123', '20/3/29', '2');
+INSERT 0 1
+viviana=# SELECT * FROM calls
+viviana-# ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  1 | 1212121212 |         |        
+  2 | 123123123  | 20/3/29 |       2
+(2 rows)
+
+#Editanto llamada 1 de id=2
+viviana=# UPDATE calls SET date='13/3/10' where id=1;
+UPDATE 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |        
+(2 rows)
+
+#Editando llamada 1 de id=2
+viviana=# UPDATE calls SET user_id='1' where id=1;                                                                 
+UPDATE 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+(2 rows)
+
+#Segunda llamada  de id=1  
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('33333333', '20/3/29', '2');                                 
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+(3 rows)
+
+#Tercera llamada  de id=1  
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('44444444', '20/3/29', '2');                                  
+INSERT 0 1
+
+#Cuarta llamada  de id=1  
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('55555555', '20/3/29', '2');
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+  6 | 44444444   | 20/3/29 |       2
+  7 | 55555555   | 20/3/29 |       2
+(5 rows)
+
+#Quinta llamada  de id=1 
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('6666666', '20/3/29', '2');                                  
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+  6 | 44444444   | 20/3/29 |       2
+  7 | 55555555   | 20/3/29 |       2
+  8 | 6666666    | 20/3/29 |       2
+(6 rows)
+
+#Sexta llamada  de id=1 
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('11111111', '20/3/29', '2');                                  
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+  6 | 44444444   | 20/3/29 |       2
+  7 | 55555555   | 20/3/29 |       2
+  8 | 6666666    | 20/3/29 |       2
+  9 | 11111111   | 20/3/29 |       2
+(7 rows)
+
+#Segunda llamada  de id=2
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('2222222', '20/3/29', '1');
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+  6 | 44444444   | 20/3/29 |       2
+  7 | 55555555   | 20/3/29 |       2
+  8 | 6666666    | 20/3/29 |       2
+  9 | 11111111   | 20/3/29 |       2
+ 10 | 2222222    | 20/3/29 |       1
+(8 rows)
+
+#Tercera llamada  de id=2
+
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('33333333', '20/3/29', '1');                                  
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+  6 | 44444444   | 20/3/29 |       2
+  7 | 55555555   | 20/3/29 |       2
+  8 | 6666666    | 20/3/29 |       2
+  9 | 11111111   | 20/3/29 |       2
+ 10 | 2222222    | 20/3/29 |       1
+ 11 | 33333333   | 20/3/29 |       1
+(9 rows)
+
+#Cuarta llamada  de id=2
+
+viviana=# INSERT INTO calls (phone, date, user_id) VALUES ('44444444', '20/3/29', '1');                                  
+INSERT 0 1
+viviana=# SELECT * FROM calls                                                                                            ;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  2 | 123123123  | 20/3/29 |       2
+  1 | 1212121212 | 13/3/10 |       1
+  5 | 33333333   | 20/3/29 |       2
+  6 | 44444444   | 20/3/29 |       2
+  7 | 55555555   | 20/3/29 |       2
+  8 | 6666666    | 20/3/29 |       2
+  9 | 11111111   | 20/3/29 |       2
+ 10 | 2222222    | 20/3/29 |       1
+ 11 | 33333333   | 20/3/29 |       1
+ 12 | 44444444   | 20/3/29 |       1
+(10 rows)
+
+# 11.- Crear un nuevo usuario.
+
+viviana=# INSERT INTO users (first_name, email) VALUES ('Viviana', 'viviana@gmail.com');                                 
+INSERT 0 1
+viviana=# SELECT * FROM users;
+ id | first_name |       email       | last_name 
+----+------------+-------------------+-----------
+  1 | Carlos     | carlos@gmail.com  | Aguero
+  2 | Laura      | laura@gmail.com   | Campos
+  4 | Viviana    | viviana@gmail.com | 
+(3 rows)
+
+ #Editar apellido de tercer usuario
+
+viviana=# UPDATE users SET last_name='Fajardo' where id = 4;
+UPDATE 1
+viviana=# SELECT * FROM users;
+ id | first_name |       email       | last_name 
+----+------------+-------------------+-----------
+  1 | Carlos     | carlos@gmail.com  | Aguero
+  2 | Laura      | laura@gmail.com   | Campos
+  4 | Viviana    | viviana@gmail.com | Fajardo
+(3 rows)
+                   
+# 12.- Seleccionar la cantidad de llamados de cada uno de los usuarios (nombre de usuario y cantidad de llamadas).
+                                               
+viviana=# SELECT count(user_id), first_name FROM calls RIGHT JOIN users on calls.user_id = users.id GROUP BY users.id;
+ count | first_name 
+-------+------------
+     0 | Viviana
+     6 | Laura
+     4 | Carlos
+(3 rows)
+
+# 13.- Seleccionar los llamados del usuario llamado Carlos ordenados por fecha en orden descendente.
+
+viviana=# SELECT * FROM calls WHERE user_id = 1;
+ id |   phone    |  date   | user_id 
+----+------------+---------+---------
+  1 | 1212121212 | 13/3/10 |       1
+ 10 | 2222222    | 20/3/29 |       1
+ 11 | 33333333   | 20/3/29 |       1
+ 12 | 44444444   | 20/3/29 |       1
+(4 rows)
+
+# 14.-Nuevos cambios solicitados por cliente.
+# "Necesito agregar a la base una tabla de auditoría que registre el motivo del borrado de una llamada y el usuario que lo efectuó."
+                                                   
+viviana=# CREATE TABLE audits ( status VARCHAR(50) , user_id INT REFERENCES users(id), call_id INT REFERENCES calls(id)); 
+CREATE TABLE
+viviana=# 
+viviana=# SELECT * FROM audits;
+ status | user_id | call_id 
+--------+---------+---------
+(0 rows)
+
+viviana=# \d audits
+                      Table "public.audits"
+ Column  |         Type          | Collation | Nullable | Default 
+---------+-----------------------+-----------+----------+---------
+ status  | character varying(50) |           |          | 
+ user_id | integer               |           |          | 
+ call_id | integer               |           |          | 
+Foreign-key constraints:
+    "audits_call_id_fkey" FOREIGN KEY (call_id) REFERENCES calls(id)
+    "audits_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+
+viviana=# 
